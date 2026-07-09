@@ -16,6 +16,29 @@ export function hashContent(content: string): string {
   return hash.toString(36);
 }
 
+/**
+ * Marker text used by MarkdownParser to encode an Obsidian embed
+ * (![[file]]) as a callout block, and by AttachmentUploader to recognize
+ * and resolve those callouts. Shared so the contract lives in one place.
+ */
+export const EMBED_PLACEHOLDER_PREFIX = "Embedded file: ";
+
+/** Render a timestamp as a short relative-time phrase ("5m ago") */
+export function formatTimeAgo(timestamp: number): string {
+  const diffMs = Date.now() - timestamp;
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}
+
 /** Sanitize a title for use as a file or folder name */
 export function sanitizeFileName(name: string): string {
   return name

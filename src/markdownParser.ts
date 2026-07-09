@@ -1,4 +1,5 @@
 import type { NotionBlock, NotionRichText } from "./types";
+import { EMBED_PLACEHOLDER_PREFIX } from "./utils";
 
 /** Max characters per Notion rich text segment */
 const MAX_RICH_TEXT_LENGTH = 2000;
@@ -634,7 +635,7 @@ export class MarkdownParser {
       type: "callout",
       callout: {
         rich_text: [
-          { type: "text", text: { content: `Embedded file: ${filename}` } },
+          { type: "text", text: { content: `${EMBED_PLACEHOLDER_PREFIX}${filename}` } },
         ],
         icon: { type: "emoji", emoji: "\u{1F4CE}" },
         color: "gray_background",

@@ -48,11 +48,18 @@ export interface SyncState {
   lastFullSync: number;
 }
 
-export const DEFAULT_SYNC_STATE: SyncState = {
-  fileMappings: {},
-  folderMappings: {},
-  lastFullSync: 0,
-};
+/**
+ * Factory rather than a shared constant: spreading a module-level object
+ * copies references to its nested maps, so every "fresh" state would share
+ * (and pollute) the same fileMappings/folderMappings objects.
+ */
+export function createDefaultSyncState(): SyncState {
+  return {
+    fileMappings: {},
+    folderMappings: {},
+    lastFullSync: 0,
+  };
+}
 
 /** Log entry for sync operations */
 export interface SyncLogEntry {
@@ -145,4 +152,7 @@ export interface SyncHistory {
   entries: SyncHistoryEntry[];
 }
 
-export const DEFAULT_SYNC_HISTORY: SyncHistory = { entries: [] };
+/** Factory for the same reason as createDefaultSyncState. */
+export function createDefaultSyncHistory(): SyncHistory {
+  return { entries: [] };
+}

@@ -1,6 +1,7 @@
 import { App, Modal } from "obsidian";
 import type NotionSyncPlugin from "../main";
 import type { SyncHistoryEntry } from "../types";
+import { formatTimeAgo } from "../utils";
 
 /**
  * Modal that displays sync history with rollback support.
@@ -63,7 +64,7 @@ export class HistoryModal extends Modal {
       "pull-new": "New page pulled",
     };
     const opLabel = opLabels[entry.operation] || entry.operation;
-    const timeAgo = this.formatTimeAgo(entry.timestamp);
+    const timeAgo = formatTimeAgo(entry.timestamp);
     metaEl.setText(`${opLabel} · ${timeAgo}`);
 
     // Rollback button (only for pull entries that have a snapshot)
@@ -85,21 +86,6 @@ export class HistoryModal extends Modal {
         })();
       });
     }
-  }
-
-  private formatTimeAgo(timestamp: number): string {
-    const diffMs = Date.now() - timestamp;
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffSecs < 60) return "just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return "yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return new Date(timestamp).toLocaleDateString();
   }
 
   onClose(): void {

@@ -9,9 +9,10 @@ import { SyncPanelView, SYNC_PANEL_VIEW_TYPE } from "./ui/syncPanelView";
 import {
   SyncMode,
   DEFAULT_SETTINGS,
-  DEFAULT_SYNC_STATE,
+  createDefaultSyncState,
 } from "./types";
 import type { PluginSettings, SyncState, SyncHistory } from "./types";
+import { formatTimeAgo } from "./utils";
 
 /** Persisted data shape in data.json */
 interface PersistedData {
@@ -186,7 +187,7 @@ export default class NotionSyncPlugin extends Plugin {
       case "idle": {
         const lastSync = this.stateManager.lastFullSync;
         if (lastSync > 0) {
-          const agoStr = this.formatTimeAgo(lastSync);
+          const agoStr = formatTimeAgo(lastSync);
           this.statusBarEl.setText(`☁ Synced ${agoStr}`);
         } else {
           this.statusBarEl.setText("☁ ready");
@@ -201,21 +202,6 @@ export default class NotionSyncPlugin extends Plugin {
         this.statusBarEl.addClass("notion-sync-status-error");
         break;
     }
-  }
-
-  private formatTimeAgo(timestamp: number): string {
-    const diffMs = Date.now() - timestamp;
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffSecs < 60) return "just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return "yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return new Date(timestamp).toLocaleDateString();
   }
 
   // ── File Explorer Indicators ───────────────────────────────
@@ -494,7 +480,7 @@ export default class NotionSyncPlugin extends Plugin {
     if (data) {
       this.settings = { ...DEFAULT_SETTINGS, ...data.settings };
       this.stateManager.setState({
-        ...DEFAULT_SYNC_STATE,
+        ...createDefaultSyncState(),
         ...data.syncState,
       });
       if (data.syncHistory) {

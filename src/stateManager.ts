@@ -7,8 +7,8 @@ import type {
   SyncHistory,
 } from "./types";
 import {
-  DEFAULT_SYNC_STATE,
-  DEFAULT_SYNC_HISTORY,
+  createDefaultSyncState,
+  createDefaultSyncHistory,
 } from "./types";
 
 /**
@@ -21,11 +21,11 @@ export class StateManager {
   private log: SyncLogEntry[] = [];
   private maxLogEntries = 500;
   private dirty = false;
-  private history: SyncHistory = { ...DEFAULT_SYNC_HISTORY, entries: [] };
+  private history: SyncHistory = createDefaultSyncHistory();
 
   constructor(plugin: Plugin, initialState?: SyncState) {
     this.plugin = plugin;
-    this.state = initialState || { ...DEFAULT_SYNC_STATE };
+    this.state = initialState || createDefaultSyncState();
   }
 
   // ── File Mappings ──────────────────────────────────────────
@@ -226,7 +226,7 @@ export class StateManager {
 
   /** Reset all state (for full re-sync) */
   reset(): void {
-    this.state = { ...DEFAULT_SYNC_STATE };
+    this.state = createDefaultSyncState();
     this.dirty = true;
   }
 }

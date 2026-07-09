@@ -2,6 +2,7 @@ import { requestUrl, TFile } from "obsidian";
 import type { App } from "obsidian";
 import type { NotionBlock, NotionBlockContent } from "./types";
 import type { StateManager } from "./stateManager";
+import { EMBED_PLACEHOLDER_PREFIX } from "./utils";
 
 /** Supported image extensions */
 const IMAGE_EXTENSIONS = new Set([
@@ -52,10 +53,10 @@ export class AttachmentUploader {
       // Check if this is an embed placeholder callout
       const calloutData = block.type === "callout" ? (block.callout as NotionBlockContent | undefined) : undefined;
       if (
-        calloutData?.rich_text?.[0]?.text?.content?.startsWith("Embedded file: ")
+        calloutData?.rich_text?.[0]?.text?.content?.startsWith(EMBED_PLACEHOLDER_PREFIX)
       ) {
         const filename = (calloutData.rich_text)[0].text?.content.replace(
-          "Embedded file: ",
+          EMBED_PLACEHOLDER_PREFIX,
           ""
         );
         const resolved = await this.resolveEmbed(filename, sourceFilePath);
