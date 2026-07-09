@@ -14,7 +14,7 @@ export class SyncLogModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("notion-sync-log-modal");
+    contentEl.addClass("notion-vault-sync-log-modal");
 
     const logs = this.stateManager.getLogs();
 

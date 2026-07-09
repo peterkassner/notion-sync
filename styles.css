@@ -1,11 +1,11 @@
 /* ── Notion Sync Panel ─────────────────────────────────────── */
 
-.notion-sync-panel,
-.notion-sync-panel * {
+.notion-vault-sync-panel,
+.notion-vault-sync-panel * {
   box-sizing: border-box;
 }
 
-.notion-sync-panel {
+.notion-vault-sync-panel {
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -17,7 +17,7 @@
 }
 
 /* Header & Status Brand */
-.notion-sync-header {
+.notion-vault-sync-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -25,20 +25,20 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.notion-sync-brand {
+.notion-vault-sync-brand {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.notion-sync-brand h3 {
+.notion-vault-sync-brand h3 {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-normal);
 }
 
-.notion-sync-status-badge {
+.notion-vault-sync-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -53,33 +53,33 @@
   color: var(--text-muted);
 }
 
-.notion-sync-status-badge.status-connected {
+.notion-vault-sync-status-badge.status-connected {
   color: var(--text-success, #4caf50);
   background: rgba(76, 175, 80, 0.1);
   border-color: rgba(76, 175, 80, 0.2);
 }
 
-.notion-sync-status-badge.status-syncing {
+.notion-vault-sync-status-badge.status-syncing {
   color: var(--text-accent);
   background: rgba(220, 220, 220, 0.1);
   border-color: rgba(220, 220, 220, 0.2);
 }
 
-.notion-sync-status-badge.status-error {
+.notion-vault-sync-status-badge.status-error {
   color: var(--text-error);
   background: rgba(244, 67, 54, 0.1);
   border-color: rgba(244, 67, 54, 0.2);
 }
 
-.notion-sync-pulsing-dot {
+.notion-vault-sync-pulsing-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-  animation: notion-sync-pulse 2s infinite;
+  animation: notion-vault-sync-pulse 2s infinite;
 }
 
-@keyframes notion-sync-pulse {
+@keyframes notion-vault-sync-pulse {
   0% {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(128, 128, 128, 0.4);
@@ -95,7 +95,7 @@
 }
 
 /* Actions Section */
-.notion-sync-actions-card {
+.notion-vault-sync-actions-card {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
@@ -107,7 +107,7 @@
 }
 
 /* Buttons */
-.notion-sync-btn-primary {
+.notion-vault-sync-btn-primary {
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   border: none;
@@ -124,23 +124,23 @@
   width: 100%;
 }
 
-.notion-sync-btn-primary:hover {
+.notion-vault-sync-btn-primary:hover {
   background: var(--interactive-accent-hover);
   transform: translateY(-1px);
 }
 
-.notion-sync-btn-primary:active {
+.notion-vault-sync-btn-primary:active {
   transform: translateY(0);
 }
 
 /* Action Grid */
-.notion-sync-action-grid {
+.notion-vault-sync-action-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 6px;
 }
 
-.notion-sync-grid-btn {
+.notion-vault-sync-grid-btn {
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
@@ -157,35 +157,35 @@
   text-align: center;
 }
 
-.notion-sync-grid-btn:hover {
+.notion-vault-sync-grid-btn:hover {
   background: var(--background-modifier-hover);
   border-color: var(--interactive-accent);
   color: var(--interactive-accent);
   transform: translateY(-1px);
 }
 
-.notion-sync-grid-btn:active {
+.notion-vault-sync-grid-btn:active {
   transform: translateY(0);
 }
 
-.notion-sync-grid-btn svg,
-.notion-sync-grid-btn .clickable-icon {
+.notion-vault-sync-grid-btn svg,
+.notion-vault-sync-grid-btn .clickable-icon {
   width: 15px;
   height: 15px;
   margin: 0 auto;
 }
 
-.notion-sync-grid-btn span {
+.notion-vault-sync-grid-btn span {
   font-size: 10px;
   font-weight: 500;
 }
 
 /* Progress bar */
-.notion-sync-progress {
+.notion-vault-sync-progress {
   padding: 8px 0;
 }
 
-.notion-sync-progress-bar {
+.notion-vault-sync-progress-bar {
   height: 6px;
   background: var(--background-modifier-border);
   border-radius: 3px;
@@ -193,14 +193,14 @@
   position: relative;
 }
 
-.notion-sync-progress-fill {
+.notion-vault-sync-progress-fill {
   height: 100%;
   background: var(--interactive-accent);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: var(--fill-width, 0%);
 }
 
-.notion-sync-progress-text {
+.notion-vault-sync-progress-text {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 6px;
@@ -209,13 +209,13 @@
 }
 
 /* Stats Cards */
-.notion-sync-stats-container {
+.notion-vault-sync-stats-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 6px;
 }
 
-.notion-sync-stat-card {
+.notion-vault-sync-stat-card {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
@@ -228,13 +228,13 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
-.notion-sync-stat-val {
+.notion-vault-sync-stat-val {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-normal);
 }
 
-.notion-sync-stat-lbl {
+.notion-vault-sync-stat-lbl {
   font-size: 10px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -242,7 +242,7 @@
 }
 
 /* Settings block card */
-.notion-sync-card-section {
+.notion-vault-sync-card-section {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
@@ -253,7 +253,7 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
-.notion-sync-card-section-title {
+.notion-vault-sync-card-section-title {
   margin: 0;
   font-size: 11px;
   font-weight: 600;
@@ -262,13 +262,13 @@
   color: var(--text-muted);
 }
 
-.notion-sync-select-wrapper {
+.notion-vault-sync-select-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.notion-sync-select {
+.notion-vault-sync-select {
   width: 100%;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
@@ -281,11 +281,11 @@
   outline: none;
 }
 
-.notion-sync-select:focus {
+.notion-vault-sync-select:focus {
   border-color: var(--interactive-accent);
 }
 
-.notion-sync-last-sync-block {
+.notion-vault-sync-last-sync-block {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -297,7 +297,7 @@
 }
 
 /* Footer / Utilities */
-.notion-sync-footer {
+.notion-vault-sync-footer {
   display: flex;
   justify-content: space-between;
   gap: 6px;
@@ -306,7 +306,7 @@
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.notion-sync-footer-btn {
+.notion-vault-sync-footer-btn {
   flex: 1;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -323,7 +323,7 @@
   color: var(--text-muted);
 }
 
-.notion-sync-footer-btn:hover {
+.notion-vault-sync-footer-btn:hover {
   background: var(--background-modifier-hover);
   border-color: var(--interactive-accent);
   color: var(--text-normal);
@@ -331,13 +331,13 @@
 
 /* ── Changes List (files to push, like git status) ─────────── */
 
-.notion-sync-changes-header {
+.notion-vault-sync-changes-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.notion-sync-changes-count {
+.notion-vault-sync-changes-count {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
@@ -349,21 +349,21 @@
   text-align: center;
 }
 
-.notion-sync-changes-list {
+.notion-vault-sync-changes-list {
   display: flex;
   flex-direction: column;
   max-height: 180px;
   overflow-y: auto;
 }
 
-.notion-sync-changes-empty {
+.notion-vault-sync-changes-empty {
   font-size: 11px;
   color: var(--text-muted);
   font-style: italic;
   padding: 2px 0;
 }
 
-.notion-sync-change-row {
+.notion-vault-sync-change-row {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -372,11 +372,11 @@
   cursor: pointer;
 }
 
-.notion-sync-change-row:hover {
+.notion-vault-sync-change-row:hover {
   background: var(--background-modifier-hover);
 }
 
-.notion-sync-change-status {
+.notion-vault-sync-change-status {
   font-size: 10px;
   font-weight: 700;
   font-family: var(--font-monospace);
@@ -385,15 +385,15 @@
   flex-shrink: 0;
 }
 
-.notion-sync-change-status.is-new {
+.notion-vault-sync-change-status.is-new {
   color: var(--color-green, #4caf50);
 }
 
-.notion-sync-change-status.is-modified {
+.notion-vault-sync-change-status.is-modified {
   color: var(--color-orange, #e9973f);
 }
 
-.notion-sync-change-name {
+.notion-vault-sync-change-name {
   flex: 1;
   font-size: 12px;
   color: var(--text-normal);
@@ -402,7 +402,7 @@
   text-overflow: ellipsis;
 }
 
-.notion-sync-change-push {
+.notion-vault-sync-change-push {
   background: transparent;
   border: none;
   padding: 2px;
@@ -415,23 +415,23 @@
   flex-shrink: 0;
 }
 
-.notion-sync-change-row:hover .notion-sync-change-push {
+.notion-vault-sync-change-row:hover .notion-vault-sync-change-push {
   visibility: visible;
 }
 
-.notion-sync-change-push:hover {
+.notion-vault-sync-change-push:hover {
   color: var(--interactive-accent);
   background: var(--background-modifier-border);
 }
 
-.notion-sync-change-push svg {
+.notion-vault-sync-change-push svg {
   width: 13px;
   height: 13px;
 }
 
 /* ── File Explorer Indicators ──────────────────────────────── */
 
-.nav-file-title.notion-sync-synced::after {
+.nav-file-title.notion-vault-sync-synced::after {
   content: "✓";
   color: var(--color-green, #4caf50);
   font-size: 10px;
@@ -439,7 +439,7 @@
   opacity: 0.6;
 }
 
-.nav-file-title.notion-sync-modified::after {
+.nav-file-title.notion-vault-sync-modified::after {
   content: "M";
   color: var(--interactive-accent);
   font-size: 10px;
@@ -449,32 +449,32 @@
 
 /* ── Status Bar ────────────────────────────────────────────── */
 
-.status-bar-item.notion-sync-status-error {
+.status-bar-item.notion-vault-sync-status-error {
   color: var(--text-error);
 }
 
 /* ── History Modal ─────────────────────────────────────────── */
 
-.notion-sync-history-modal {
+.notion-vault-sync-history-modal {
   min-width: 400px;
 }
 
-.notion-sync-history-modal h2 {
+.notion-vault-sync-history-modal h2 {
   margin-bottom: 12px;
 }
 
-.notion-sync-history-empty {
+.notion-vault-sync-history-empty {
   color: var(--text-muted);
   font-style: italic;
   padding: 12px 0;
 }
 
-.notion-sync-history-list {
+.notion-vault-sync-history-list {
   max-height: 480px;
   overflow-y: auto;
 }
 
-.notion-sync-history-entry {
+.notion-vault-sync-history-entry {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -482,11 +482,11 @@
   border-bottom: 1px solid var(--background-modifier-border-hover);
 }
 
-.notion-sync-history-entry:last-child {
+.notion-vault-sync-history-entry:last-child {
   border-bottom: none;
 }
 
-.notion-sync-history-icon {
+.notion-vault-sync-history-icon {
   width: 24px;
   height: 24px;
   display: flex;
@@ -498,27 +498,27 @@
   flex-shrink: 0;
 }
 
-.notion-sync-history-op-push {
+.notion-vault-sync-history-op-push {
   color: var(--interactive-accent);
   background: var(--background-modifier-form-field);
 }
 
-.notion-sync-history-op-pull {
+.notion-vault-sync-history-op-pull {
   color: var(--color-green, #4caf50);
   background: var(--background-modifier-form-field);
 }
 
-.notion-sync-history-op-pull-new {
+.notion-vault-sync-history-op-pull-new {
   color: var(--text-accent);
   background: var(--background-modifier-form-field);
 }
 
-.notion-sync-history-info {
+.notion-vault-sync-history-info {
   flex: 1;
   min-width: 0;
 }
 
-.notion-sync-history-filename {
+.notion-vault-sync-history-filename {
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -527,13 +527,13 @@
   color: var(--text-normal);
 }
 
-.notion-sync-history-meta {
+.notion-vault-sync-history-meta {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 2px;
 }
 
-.notion-sync-history-rollback-btn {
+.notion-vault-sync-history-rollback-btn {
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 4px;
@@ -545,18 +545,18 @@
   white-space: nowrap;
 }
 
-.notion-sync-history-rollback-btn:hover {
+.notion-vault-sync-history-rollback-btn:hover {
   background: var(--background-modifier-hover);
 }
 
-.notion-sync-history-rollback-btn:disabled {
+.notion-vault-sync-history-rollback-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* ── Progress hidden state ─────────────────────────────────── */
 
-.notion-sync-progress-hidden {
+.notion-vault-sync-progress-hidden {
   display: none;
 }
 

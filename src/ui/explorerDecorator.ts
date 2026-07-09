@@ -54,13 +54,13 @@ export class ExplorerDecorator {
       const isSynced = path in allMappings;
       const isDirty = this.dirtyFiles.has(path);
 
-      el.removeClass("notion-sync-synced");
-      el.removeClass("notion-sync-modified");
+      el.removeClass("notion-vault-sync-synced");
+      el.removeClass("notion-vault-sync-modified");
 
       if (isSynced && isDirty) {
-        el.addClass("notion-sync-modified");
+        el.addClass("notion-vault-sync-modified");
       } else if (isSynced && !isDirty) {
-        el.addClass("notion-sync-synced");
+        el.addClass("notion-vault-sync-synced");
       }
     });
   }

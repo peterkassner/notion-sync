@@ -22,11 +22,11 @@ export class ChangesList {
 
   /** Create the card inside the given parent and do an initial refresh. */
   mount(parent: HTMLElement): void {
-    const card = parent.createDiv({ cls: "notion-sync-card-section notion-sync-changes-card" });
-    const header = card.createDiv({ cls: "notion-sync-changes-header" });
-    header.createEl("p", { text: "Changes", cls: "notion-sync-card-section-title" });
-    this.countEl = header.createSpan({ cls: "notion-sync-changes-count", text: "0" });
-    this.listEl = card.createDiv({ cls: "notion-sync-changes-list" });
+    const card = parent.createDiv({ cls: "notion-vault-sync-card-section notion-vault-sync-changes-card" });
+    const header = card.createDiv({ cls: "notion-vault-sync-changes-header" });
+    header.createEl("p", { text: "Changes", cls: "notion-vault-sync-card-section-title" });
+    this.countEl = header.createSpan({ cls: "notion-vault-sync-changes-count", text: "0" });
+    this.listEl = card.createDiv({ cls: "notion-vault-sync-changes-list" });
     void this.refresh();
   }
 
@@ -41,7 +41,7 @@ export class ChangesList {
 
     listEl.empty();
     if (changes.length === 0) {
-      listEl.createDiv({ cls: "notion-sync-changes-empty", text: "Everything is synced" });
+      listEl.createDiv({ cls: "notion-vault-sync-changes-empty", text: "Everything is synced" });
       return;
     }
 
@@ -51,16 +51,16 @@ export class ChangesList {
   }
 
   private renderRow(listEl: HTMLElement, change: PendingChange): void {
-    const row = listEl.createDiv({ cls: "notion-sync-change-row" });
+    const row = listEl.createDiv({ cls: "notion-vault-sync-change-row" });
 
     row.createSpan({
-      cls: `notion-sync-change-status is-${change.status}`,
+      cls: `notion-vault-sync-change-status is-${change.status}`,
       text: change.status === "new" ? "U" : "M",
       attr: { "aria-label": change.status === "new" ? "Not synced yet" : "Modified since last sync" },
     });
 
     row.createSpan({
-      cls: "notion-sync-change-name",
+      cls: "notion-vault-sync-change-name",
       text: change.name,
       attr: { "aria-label": change.path },
     });
@@ -70,7 +70,7 @@ export class ChangesList {
     });
 
     const pushBtn = row.createEl("button", {
-      cls: "notion-sync-change-push",
+      cls: "notion-vault-sync-change-push",
       attr: { "aria-label": `Push ${change.name} to Notion` },
     });
     setIcon(pushBtn, "upload");

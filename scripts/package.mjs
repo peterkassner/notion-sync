@@ -3,7 +3,7 @@ import path from "path";
 import archiver from "archiver";
 
 // Create a release zip containing the plugin files expected by Obsidian.
-const outName = process.env.OUT_NAME || "notion-sync-release.zip";
+const outName = process.env.OUT_NAME || "notion-vault-sync-release.zip";
 const outPath = path.resolve(process.cwd(), outName);
 
 const files = [

@@ -197,7 +197,7 @@ export class NotionSyncSettingTab extends PluginSettingTab {
   private addStatusSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName("Status").setHeading();
 
-    const statusEl = containerEl.createDiv({ cls: "notion-sync-status" });
+    const statusEl = containerEl.createDiv({ cls: "notion-vault-sync-status" });
     statusEl.createEl("p", {
       text: `Synced files: ${this.plugin.stateManager.syncedFileCount}`,
     });

@@ -1,4 +1,4 @@
-# Notion Sync for Obsidian
+# Notion Vault Sync for Obsidian
 
 Synchronize your entire Obsidian vault to Notion — preserving folder hierarchy, markdown formatting, internal links, frontmatter metadata, and attachments.
 
@@ -51,7 +51,7 @@ Synchronize your entire Obsidian vault to Notion — preserving folder hierarchy
 
 ### 3. Configure the Plugin
 
-Open **Settings → Notion Sync** and fill in:
+Open **Settings → Notion Vault Sync** and fill in:
 
 | Setting | Description |
 |---|---|
@@ -163,14 +163,14 @@ Your Notion API token and page IDs are stored locally in `data.json` inside your
 ### From Obsidian Community Plugins *(pending review)*
 
 1. Open **Settings → Community Plugins → Browse**
-2. Search for **Notion Sync**
+2. Search for **Notion Vault Sync**
 3. Click **Install**, then **Enable**
 
 ### Manual Installation
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release on the [Releases](../../releases) page
 2. Copy all three files into your vault's plugin folder:  
-   `.obsidian/plugins/notion-sync/`
+   `.obsidian/plugins/notion-vault-sync/`
 3. Reload Obsidian and enable the plugin under **Settings → Community Plugins**
 
 ---

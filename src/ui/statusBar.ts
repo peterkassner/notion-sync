@@ -14,7 +14,7 @@ export class StatusBarController {
   ) {}
 
   update(state: StatusBarState): void {
-    this.el.removeClass("notion-sync-status-error");
+    this.el.removeClass("notion-vault-sync-status-error");
 
     switch (state) {
       case "idle": {
@@ -31,7 +31,7 @@ export class StatusBarController {
         break;
       case "error":
         this.el.setText("⚠ sync error");
-        this.el.addClass("notion-sync-status-error");
+        this.el.addClass("notion-vault-sync-status-error");
         break;
     }
   }

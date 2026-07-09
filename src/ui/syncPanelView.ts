@@ -3,7 +3,7 @@ import type NotionSyncPlugin from "../main";
 import { SyncMode } from "../types";
 import { ChangesList } from "./changesList";
 
-export const SYNC_PANEL_VIEW_TYPE = "notion-sync-panel";
+export const SYNC_PANEL_VIEW_TYPE = "notion-vault-sync-panel";
 
 /**
  * Side panel view for Notion Sync — similar to VS Code's Source Control panel.
@@ -85,21 +85,21 @@ export class SyncPanelView extends ItemView {
   render(): void {
     const root = this.containerEl.children[1] as HTMLElement;
     root.empty();
-    root.addClass("notion-sync-panel");
+    root.addClass("notion-vault-sync-panel");
 
     // ── Header & Status Brand ────────────────────────────────
-    const header = root.createDiv({ cls: "notion-sync-header" });
-    const brand = header.createDiv({ cls: "notion-sync-brand" });
-    brand.createEl("h3", { text: "Notion sync" });
+    const header = root.createDiv({ cls: "notion-vault-sync-header" });
+    const brand = header.createDiv({ cls: "notion-vault-sync-brand" });
+    brand.createEl("h3", { text: "Notion Vault Sync" });
     this.badgeEl = header.createDiv();
     this.updateStatusBadge();
 
     // ── Actions Card ──────────────────────────────────────────
-    const actionsCard = root.createDiv({ cls: "notion-sync-actions-card" });
+    const actionsCard = root.createDiv({ cls: "notion-vault-sync-actions-card" });
 
     // Primary Action (Push Vault)
     const pushBtn = actionsCard.createEl("button", {
-      cls: "notion-sync-btn-primary",
+      cls: "notion-vault-sync-btn-primary",
       attr: { "aria-label": "Push: sync entire vault to Notion" }
     });
     setIcon(pushBtn, "upload-cloud");
@@ -109,7 +109,7 @@ export class SyncPanelView extends ItemView {
     });
 
     // Action Grid for quick actions
-    const grid = actionsCard.createDiv({ cls: "notion-sync-action-grid" });
+    const grid = actionsCard.createDiv({ cls: "notion-vault-sync-action-grid" });
 
     this.addGridBtn(grid, "refresh-cw", "Sync Changed", "Push: Sync changed files to Notion", () => {
       void this.runAction(() => this.plugin.syncIncrementalPublic());
@@ -128,32 +128,32 @@ export class SyncPanelView extends ItemView {
     });
 
     // ── Progress bar ───────────────────────────────────────────
-    this.progressEl = root.createDiv({ cls: "notion-sync-progress notion-sync-progress-hidden" });
+    this.progressEl = root.createDiv({ cls: "notion-vault-sync-progress notion-vault-sync-progress-hidden" });
 
-    const progressBar = this.progressEl.createDiv({ cls: "notion-sync-progress-bar" });
-    this.progressFillEl = progressBar.createDiv({ cls: "notion-sync-progress-fill" });
-    this.progressTextEl = this.progressEl.createDiv({ cls: "notion-sync-progress-text" });
+    const progressBar = this.progressEl.createDiv({ cls: "notion-vault-sync-progress-bar" });
+    this.progressFillEl = progressBar.createDiv({ cls: "notion-vault-sync-progress-fill" });
+    this.progressTextEl = this.progressEl.createDiv({ cls: "notion-vault-sync-progress-text" });
 
     // ── Changes (files a push would send, like git status) ────
     this.changesList.mount(root);
 
     // ── Stats Cards ────────────────────────────────────────────
-    const statsContainer = root.createDiv({ cls: "notion-sync-stats-container" });
+    const statsContainer = root.createDiv({ cls: "notion-vault-sync-stats-container" });
 
-    const filesCard = statsContainer.createDiv({ cls: "notion-sync-stat-card" });
-    this.filesCountEl = filesCard.createDiv({ cls: "notion-sync-stat-val" });
-    filesCard.createDiv({ cls: "notion-sync-stat-lbl", text: "Files" });
+    const filesCard = statsContainer.createDiv({ cls: "notion-vault-sync-stat-card" });
+    this.filesCountEl = filesCard.createDiv({ cls: "notion-vault-sync-stat-val" });
+    filesCard.createDiv({ cls: "notion-vault-sync-stat-lbl", text: "Files" });
 
-    const foldersCard = statsContainer.createDiv({ cls: "notion-sync-stat-card" });
-    this.foldersCountEl = foldersCard.createDiv({ cls: "notion-sync-stat-val" });
-    foldersCard.createDiv({ cls: "notion-sync-stat-lbl", text: "Folders" });
+    const foldersCard = statsContainer.createDiv({ cls: "notion-vault-sync-stat-card" });
+    this.foldersCountEl = foldersCard.createDiv({ cls: "notion-vault-sync-stat-val" });
+    foldersCard.createDiv({ cls: "notion-vault-sync-stat-lbl", text: "Folders" });
 
     // ── Mode selector card ─────────────────────────────────────
-    const modeCard = root.createDiv({ cls: "notion-sync-card-section" });
-    modeCard.createEl("p", { text: "Auto sync mode", cls: "notion-sync-card-section-title" });
+    const modeCard = root.createDiv({ cls: "notion-vault-sync-card-section" });
+    modeCard.createEl("p", { text: "Auto sync mode", cls: "notion-vault-sync-card-section-title" });
 
-    const selectWrapper = modeCard.createDiv({ cls: "notion-sync-select-wrapper" });
-    const modeSelect = selectWrapper.createEl("select", { cls: "notion-sync-select" });
+    const selectWrapper = modeCard.createDiv({ cls: "notion-vault-sync-select-wrapper" });
+    const modeSelect = selectWrapper.createEl("select", { cls: "notion-vault-sync-select" });
     const options: [SyncMode, string][] = [
       [SyncMode.Manual, "Manual"],
       [SyncMode.OnSave, "On save"],
@@ -175,10 +175,10 @@ export class SyncPanelView extends ItemView {
 
     // Interval picker (only visible in Scheduled mode)
     if (this.plugin.settings.syncMode === SyncMode.Scheduled) {
-      const intervalRow = modeCard.createDiv({ cls: "notion-sync-mode-row" });
-      intervalRow.createEl("span", { text: "Every", cls: "notion-sync-interval-label" });
+      const intervalRow = modeCard.createDiv({ cls: "notion-vault-sync-mode-row" });
+      intervalRow.createEl("span", { text: "Every", cls: "notion-vault-sync-interval-label" });
 
-      const intervalSelect = intervalRow.createEl("select", { cls: "notion-sync-select" });
+      const intervalSelect = intervalRow.createEl("select", { cls: "notion-vault-sync-select" });
       for (const mins of [5, 10, 15, 30, 60]) {
         const opt = intervalSelect.createEl("option", { text: `${mins} min`, value: String(mins) });
         if (this.plugin.settings.scheduledIntervalMinutes === mins) opt.selected = true;
@@ -194,20 +194,20 @@ export class SyncPanelView extends ItemView {
     }
 
     // Last Sync status
-    this.lastSyncEl = modeCard.createDiv({ cls: "notion-sync-last-sync-block" });
+    this.lastSyncEl = modeCard.createDiv({ cls: "notion-vault-sync-last-sync-block" });
 
     // ── Footer Utilities ───────────────────────────────────────
-    const footer = root.createDiv({ cls: "notion-sync-footer" });
+    const footer = root.createDiv({ cls: "notion-vault-sync-footer" });
 
     const historyBtn = footer.createEl("button", {
-      cls: "notion-sync-footer-btn",
+      cls: "notion-vault-sync-footer-btn",
     });
     setIcon(historyBtn, "history");
     historyBtn.createSpan({ text: "History" });
     historyBtn.addEventListener("click", () => this.plugin.openHistoryModal());
 
     const logBtn = footer.createEl("button", {
-      cls: "notion-sync-footer-btn",
+      cls: "notion-vault-sync-footer-btn",
     });
     setIcon(logBtn, "list");
     logBtn.createSpan({ text: "Logs" });
@@ -273,8 +273,8 @@ export class SyncPanelView extends ItemView {
       statusText = "Syncing";
     }
 
-    this.badgeEl.className = `notion-sync-status-badge ${statusClass}`;
-    this.badgeEl.createDiv({ cls: "notion-sync-pulsing-dot" });
+    this.badgeEl.className = `notion-vault-sync-status-badge ${statusClass}`;
+    this.badgeEl.createDiv({ cls: "notion-vault-sync-pulsing-dot" });
     this.badgeEl.createSpan({ text: statusText });
   }
 
@@ -285,7 +285,7 @@ export class SyncPanelView extends ItemView {
     this.updateStatusBadge();
 
     if (!this.progressEl || !this.progressFillEl || !this.progressTextEl) return;
-    this.progressEl.removeClass("notion-sync-progress-hidden");
+    this.progressEl.removeClass("notion-vault-sync-progress-hidden");
     this.progressFillEl.setCssProps({ "--fill-width": `${Math.max(0, Math.min(100, percent))}%` });
     
     // Split the text to show progress details elegantly
@@ -300,7 +300,7 @@ export class SyncPanelView extends ItemView {
     this.updateStatusBadge();
 
     if (!this.progressEl) return;
-    this.progressEl.addClass("notion-sync-progress-hidden");
+    this.progressEl.addClass("notion-vault-sync-progress-hidden");
     if (this.progressFillEl) this.progressFillEl.setCssProps({ "--fill-width": "0%" });
     if (this.progressTextEl) this.progressTextEl.setText("");
   }
@@ -315,7 +315,7 @@ export class SyncPanelView extends ItemView {
     onClick: () => void
   ): HTMLElement {
     const btn = container.createEl("button", {
-      cls: "notion-sync-grid-btn",
+      cls: "notion-vault-sync-grid-btn",
       attr: { "aria-label": tooltip },
     });
     setIcon(btn, iconName);

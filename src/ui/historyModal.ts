@@ -17,7 +17,7 @@ export class HistoryModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("notion-sync-history-modal");
+    contentEl.addClass("notion-vault-sync-history-modal");
 
     contentEl.createEl("h2", { text: "Sync history" });
 
@@ -26,12 +26,12 @@ export class HistoryModal extends Modal {
     if (entries.length === 0) {
       contentEl.createEl("p", {
         text: "No sync history yet.",
-        cls: "notion-sync-history-empty",
+        cls: "notion-vault-sync-history-empty",
       });
       return;
     }
 
-    const listEl = contentEl.createDiv({ cls: "notion-sync-history-list" });
+    const listEl = contentEl.createDiv({ cls: "notion-vault-sync-history-list" });
 
     for (const entry of entries) {
       this.renderEntry(listEl, entry);
@@ -39,25 +39,25 @@ export class HistoryModal extends Modal {
   }
 
   private renderEntry(container: HTMLElement, entry: SyncHistoryEntry): void {
-    const row = container.createDiv({ cls: "notion-sync-history-entry" });
+    const row = container.createDiv({ cls: "notion-vault-sync-history-entry" });
 
     // Icon
-    const iconEl = row.createDiv({ cls: "notion-sync-history-icon" });
+    const iconEl = row.createDiv({ cls: "notion-vault-sync-history-icon" });
     const iconMap: Record<string, string> = {
       push: "↑",
       pull: "↓",
       "pull-new": "★",
     };
     iconEl.setText(iconMap[entry.operation] || "•");
-    iconEl.addClass(`notion-sync-history-op-${entry.operation}`);
+    iconEl.addClass(`notion-vault-sync-history-op-${entry.operation}`);
 
     // Info
-    const infoEl = row.createDiv({ cls: "notion-sync-history-info" });
+    const infoEl = row.createDiv({ cls: "notion-vault-sync-history-info" });
 
-    const nameEl = infoEl.createDiv({ cls: "notion-sync-history-filename" });
+    const nameEl = infoEl.createDiv({ cls: "notion-vault-sync-history-filename" });
     nameEl.setText(entry.fileName);
 
-    const metaEl = infoEl.createDiv({ cls: "notion-sync-history-meta" });
+    const metaEl = infoEl.createDiv({ cls: "notion-vault-sync-history-meta" });
     const opLabels: Record<string, string> = {
       push: "Pushed to Notion",
       pull: "Pulled from Notion",
@@ -71,7 +71,7 @@ export class HistoryModal extends Modal {
     if (entry.operation === "pull" && entry.snapshot) {
       const rollbackBtn = row.createEl("button", {
         text: "↩ rollback",
-        cls: "notion-sync-history-rollback-btn",
+        cls: "notion-vault-sync-history-rollback-btn",
       });
       rollbackBtn.addEventListener("click", () => {
         void (async () => {
