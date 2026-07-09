@@ -10,12 +10,17 @@ Synchronize your entire Obsidian vault to Notion — preserving folder hierarchy
 - **Incremental sync** — only pushes files that have changed since the last sync
 - **On-save sync** — automatically syncs a note to Notion the moment you save it
 - **Scheduled sync** — runs sync automatically on a configurable interval
+- **Pull from Notion** — bring pages back into your vault: pull all mapped notes, or pull only new pages created in Notion
+- **Sync panel** — a sidebar panel with one-click push/pull actions, live status, and synced file/folder counts
+- **Changes list** — a `git status`-style list of files that have local changes pending a push, each with its own push button
+- **Sync history** — a history modal of every push/pull, with rollback for pulled files
 - **Folder hierarchy** — recreates your folder tree as nested Notion pages
 - **Markdown conversion** — headings, bold, italic, code, tables, blockquotes, lists, dividers, and more all convert to native Notion blocks
 - **Frontmatter metadata** — YAML frontmatter is parsed and synced as Notion page properties
 - **Internal link resolution** — `[[wikilinks]]` are resolved to their synced Notion page URLs
 - **Attachment support** — images and file embeds (`![[file.png]]`) can be uploaded to Notion via a configurable upload endpoint
-- **Sync log** — an in-app log modal shows every sync operation with timestamps and status
+- **Image download on pull** — when pulling from Notion, images are downloaded locally and rewritten as Obsidian embeds
+- **Sync log** — an in-app log modal shows every sync operation with timestamps and status, with a one-click clear
 - **Connection test** — verify your Notion API token with a single click before syncing
 - **Abort support** — cancel an in-progress sync at any time
 
@@ -55,6 +60,7 @@ Open **Settings → Notion Sync** and fill in:
 | **Sync Mode** | Manual / On Save / Scheduled / Current File |
 | **Sync Attachments** | Upload images and file embeds |
 | **Sync Metadata** | Push YAML frontmatter as page properties |
+| **Download Images on Pull** | Download Notion images locally and rewrite as `![[...]]` embeds |
 | **Sync Interval** | How often to auto-sync (minutes, scheduled mode only) |
 | **Attachment Upload URL** | Optional external endpoint for file uploads |
 
@@ -73,6 +79,31 @@ Click **Test Connection** to verify everything is working.
 
 ---
 
+## Sync Panel
+
+Open the panel from the ribbon icon (cloud) or the **Open sync panel** command. It gives you:
+
+- **Push vault to Notion** and quick actions for **Sync Changed**, **Push Note**, **Pull All**, and **Pull New**
+- A **Changes** section listing files with local edits not yet pushed — `U` for not-yet-synced notes, `M` for modified ones — each row opens the file or pushes it individually
+- Live **status badge**, synced **file/folder counts**, and the time of the last sync
+- **History** and **Logs** buttons
+
+---
+
+## Pulling from Notion
+
+Sync is two-way. When pulling, **Notion is the source of truth** and local files are overwritten (a snapshot is saved to history first, so pulls can be rolled back).
+
+| Action | Behavior |
+|---|---|
+| **Pull all** | Overwrites every mapped local note with its current Notion content |
+| **Pull new pages** | Walks the Notion tree under your root page and creates local notes for pages that aren't mapped yet |
+| **Pull current note** | Overwrites just the open note |
+
+With **Download Images on Pull** enabled, images referenced in pulled pages are downloaded into a local `_attachments` folder and rewritten as `![[filename]]` embeds.
+
+---
+
 ## Commands
 
 All commands are available via the Command Palette (`Cmd/Ctrl + P`):
@@ -82,7 +113,11 @@ All commands are available via the Command Palette (`Cmd/Ctrl + P`):
 | **Sync entire vault to Notion** | Full sync of all notes and folders |
 | **Sync current note to Notion** | Push only the currently open note |
 | **Sync changed files to Notion** | Incremental sync — only changed files |
+| **Pull current note from Notion** | Overwrite the open note with its Notion version |
+| **Pull all notes from Notion** | Overwrite every mapped note with its Notion version |
+| **Pull new pages from Notion** | Create local notes for Notion pages not yet in the vault |
 | **Rebuild Notion hierarchy** | Re-create the folder structure in Notion without re-syncing content |
+| **Open sync panel** | Open the sidebar panel with push/pull actions and the changes list |
 | **Open sync log** | View a detailed log of all sync operations |
 
 ---
@@ -97,6 +132,7 @@ The following Obsidian/Markdown elements are converted to native Notion blocks:
 - Bulleted and numbered lists
 - To-do checkboxes (`- [ ]` / `- [x]`)
 - Block quotes (`>`)
+- Callouts (`> [!note]`, `> [!warning]`, …) mapped to colored Notion callouts
 - Code blocks (fenced with language hint)
 - Tables
 - Horizontal dividers (`---`)
@@ -132,9 +168,9 @@ Your Notion API token and page IDs are stored locally in `data.json` inside your
 
 ### Manual Installation
 
-1. Download the latest release from the [Releases](../../releases) page
-2. Copy `main.js` and `manifest.json` into your vault's plugin folder:  
-   `.obsidian/plugins/obsidian-notion-sync/`
+1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release on the [Releases](../../releases) page
+2. Copy all three files into your vault's plugin folder:  
+   `.obsidian/plugins/notion-sync/`
 3. Reload Obsidian and enable the plugin under **Settings → Community Plugins**
 
 ---
