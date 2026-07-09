@@ -90,7 +90,7 @@ export class SyncPanelView extends ItemView {
     // ── Header & Status Brand ────────────────────────────────
     const header = root.createDiv({ cls: "notion-vault-sync-header" });
     const brand = header.createDiv({ cls: "notion-vault-sync-brand" });
-    brand.createEl("h3", { text: "Notion Vault Sync" });
+    brand.createEl("h3", { text: "Notion vault sync" });
     this.badgeEl = header.createDiv();
     this.updateStatusBadge();
 

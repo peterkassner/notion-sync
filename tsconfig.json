@@ -10,7 +10,7 @@
     "moduleResolution": "bundler",
     "importHelpers": true,
     "isolatedModules": true,
-    "lib": ["DOM", "ES2018", "ES2021.String"]
+    "lib": ["DOM", "ES2018", "ES2019.String", "ES2021.String"]
   },
   "include": ["src/**/*.ts"]
 }

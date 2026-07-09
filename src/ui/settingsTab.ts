@@ -114,7 +114,6 @@ export class NotionSyncSettingTab extends PluginSettingTab {
           slider
             .setLimits(5, 120, 5)
             .setValue(this.plugin.settings.scheduledIntervalMinutes)
-            .setDynamicTooltip()
             .onChange(async (value) => {
               this.plugin.settings.scheduledIntervalMinutes = value;
               await this.plugin.saveSettings();
