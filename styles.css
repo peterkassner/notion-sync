@@ -124,8 +124,8 @@
   color: var(--text-muted);
 }
 
-.notion-sync-mode-label {
-  color: var(--text-accent) !important;
+.notion-sync-panel .notion-sync-mode-label {
+  color: var(--text-accent);
   font-weight: 500;
 }
 
@@ -149,8 +149,8 @@
 
 /* ── Status Bar ────────────────────────────────────────────── */
 
-.notion-sync-status-error {
-  color: var(--text-error) !important;
+.status-bar-item.notion-sync-status-error {
+  color: var(--text-error);
 }
 
 /* ── History Modal ─────────────────────────────────────────── */
@@ -258,10 +258,6 @@
 
 .notion-sync-progress-hidden {
   display: none;
-}
-
-.notion-sync-progress-fill {
-  width: var(--fill-width, 0%);
 }
 
 /* ── Sync Log Modal ────────────────────────────────────────── */
