@@ -12,7 +12,8 @@ import {
   createDefaultSyncState,
 } from "./types";
 import type { PluginSettings, SyncState, SyncHistory } from "./types";
-import { formatTimeAgo } from "./utils";
+import { StatusBarController, type StatusBarState } from "./ui/statusBar";
+import { ExplorerDecorator } from "./ui/explorerDecorator";
 
 /** Persisted data shape in data.json */
 interface PersistedData {
@@ -32,11 +33,9 @@ export default class NotionSyncPlugin extends Plugin {
   private autoSyncDebounce: number | null = null;
   private onSaveEventRef: ReturnType<typeof this.app.vault.on> | null = null;
 
-  // ── Status Bar ─────────────────────────────────────────────
-  private statusBarEl!: HTMLElement;
-
-  // ── File Explorer Indicators ───────────────────────────────
-  private dirtyFiles = new Set<string>();
+  // ── UI Controllers ─────────────────────────────────────────
+  private statusBar!: StatusBarController;
+  private readonly decorator = new ExplorerDecorator(this.stateManager);
 
   async onload(): Promise<void> {
     await this.loadState();
@@ -51,7 +50,7 @@ export default class NotionSyncPlugin extends Plugin {
     this.syncEngine.setPersistCallback(() => this.saveState());
 
     // Status bar
-    this.statusBarEl = this.addStatusBarItem();
+    this.statusBar = new StatusBarController(this.addStatusBarItem(), this.stateManager);
 
     // Settings tab
     this.addSettingTab(new NotionSyncSettingTab(this.app, this));
@@ -134,8 +133,7 @@ export default class NotionSyncPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("modify", (file) => {
         if (file instanceof TFile && file.extension === "md") {
-          this.dirtyFiles.add(file.path);
-          this.refreshExplorerDecorations();
+          this.decorator.markDirty(file.path);
         }
       })
     );
@@ -144,13 +142,8 @@ export default class NotionSyncPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("rename", (file, oldPath) => {
         this.stateManager.renamePath(oldPath, file.path);
-        // Update dirtyFiles set
-        if (this.dirtyFiles.has(oldPath)) {
-          this.dirtyFiles.delete(oldPath);
-          this.dirtyFiles.add(file.path);
-        }
+        this.decorator.renamePath(oldPath, file.path);
         this.debounceSaveState();
-        this.refreshExplorerDecorations();
       })
     );
 
@@ -158,14 +151,13 @@ export default class NotionSyncPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("delete", (file) => {
         this.stateManager.removeFileMapping(file.path);
-        this.dirtyFiles.delete(file.path);
+        this.decorator.clearDirty(file.path);
         this.debounceSaveState();
-        this.refreshExplorerDecorations();
       })
     );
 
     // Refresh explorer decorations once layout is ready
-    this.app.workspace.onLayoutReady(() => this.refreshExplorerDecorations());
+    this.app.workspace.onLayoutReady(() => this.decorator.refresh());
 
     // Initial status bar state
     this.updateStatusBar("idle");
@@ -178,53 +170,8 @@ export default class NotionSyncPlugin extends Plugin {
 
   // ── Status Bar ─────────────────────────────────────────────
 
-  updateStatusBar(state: "idle" | "syncing" | "error", _detail?: string): void {
-    if (!this.statusBarEl) return;
-
-    this.statusBarEl.removeClass("notion-sync-status-error");
-
-    switch (state) {
-      case "idle": {
-        const lastSync = this.stateManager.lastFullSync;
-        if (lastSync > 0) {
-          const agoStr = formatTimeAgo(lastSync);
-          this.statusBarEl.setText(`☁ Synced ${agoStr}`);
-        } else {
-          this.statusBarEl.setText("☁ ready");
-        }
-        break;
-      }
-      case "syncing":
-        this.statusBarEl.setText("⟳ syncing...");
-        break;
-      case "error":
-        this.statusBarEl.setText("⚠ sync error");
-        this.statusBarEl.addClass("notion-sync-status-error");
-        break;
-    }
-  }
-
-  // ── File Explorer Indicators ───────────────────────────────
-
-  private refreshExplorerDecorations(): void {
-    const allMappings = this.stateManager.getAllFileMappings();
-
-    activeDocument.querySelectorAll<HTMLElement>(".nav-file-title").forEach((el) => {
-      const path = el.getAttribute("data-path");
-      if (!path) return;
-
-      const isSynced = path in allMappings;
-      const isDirty = this.dirtyFiles.has(path);
-
-      el.removeClass("notion-sync-synced");
-      el.removeClass("notion-sync-modified");
-
-      if (isSynced && isDirty) {
-        el.addClass("notion-sync-modified");
-      } else if (isSynced && !isDirty) {
-        el.addClass("notion-sync-synced");
-      }
-    });
+  updateStatusBar(state: StatusBarState): void {
+    this.statusBar?.update(state);
   }
 
   // ── Get Active Sync Panel ──────────────────────────────────
@@ -348,8 +295,7 @@ export default class NotionSyncPlugin extends Plugin {
     }
     try {
       await this.pushFile(file);
-      this.dirtyFiles.delete(file.path);
-      this.refreshExplorerDecorations();
+      this.decorator.clearDirty(file.path);
       this.updateStatusBar("idle");
     } catch (e) {
       this.updateStatusBar("error");
@@ -374,8 +320,7 @@ export default class NotionSyncPlugin extends Plugin {
       };
       new Notice(messages[result] ?? `Done: ${file.basename}`);
       if (result === "pulled") {
-        this.dirtyFiles.delete(file.path);
-        this.refreshExplorerDecorations();
+        this.decorator.clearDirty(file.path);
       }
       await this.saveState();
       this.updateStatusBar("idle");
@@ -393,11 +338,7 @@ export default class NotionSyncPlugin extends Plugin {
     try {
       await this.syncEngine.pullAll();
       // Clear dirty flags for all synced files
-      const allMappings = this.stateManager.getAllFileMappings();
-      for (const p of Object.keys(allMappings)) {
-        this.dirtyFiles.delete(p);
-      }
-      this.refreshExplorerDecorations();
+      this.decorator.clearDirtyMany(Object.keys(this.stateManager.getAllFileMappings()));
       await this.saveState();
       this.updateStatusBar("idle");
     } catch (e) {
@@ -416,7 +357,7 @@ export default class NotionSyncPlugin extends Plugin {
     this.syncEngine.setProgressCallback((text, pct) => panel?.showProgress(text, pct));
     try {
       await this.syncEngine.pullNewPages();
-      this.refreshExplorerDecorations();
+      this.decorator.refresh();
       await this.saveState();
       this.updateStatusBar("idle");
     } catch (e) {
@@ -499,11 +440,7 @@ export default class NotionSyncPlugin extends Plugin {
     try {
       await this.syncEngine.syncFullVault();
       // Clear dirty flags for all mapped files
-      const allMappings = this.stateManager.getAllFileMappings();
-      for (const p of Object.keys(allMappings)) {
-        this.dirtyFiles.delete(p);
-      }
-      this.refreshExplorerDecorations();
+      this.decorator.clearDirtyMany(Object.keys(this.stateManager.getAllFileMappings()));
       await this.saveState();
       this.updateStatusBar("idle");
     } catch (e) {
@@ -521,11 +458,7 @@ export default class NotionSyncPlugin extends Plugin {
     this.syncEngine.setProgressCallback((text, pct) => panel?.showProgress(text, pct));
     try {
       await this.syncEngine.syncIncremental();
-      const allMappings = this.stateManager.getAllFileMappings();
-      for (const p of Object.keys(allMappings)) {
-        this.dirtyFiles.delete(p);
-      }
-      this.refreshExplorerDecorations();
+      this.decorator.clearDirtyMany(Object.keys(this.stateManager.getAllFileMappings()));
       await this.saveState();
       this.updateStatusBar("idle");
     } catch (e) {
@@ -542,8 +475,7 @@ export default class NotionSyncPlugin extends Plugin {
     this.updateStatusBar("syncing");
     try {
       await this.syncEngine.syncCurrentFile(file);
-      this.dirtyFiles.delete(file.path);
-      this.refreshExplorerDecorations();
+      this.decorator.clearDirty(file.path);
       await this.saveState();
       this.updateStatusBar("idle");
     } catch (e) {

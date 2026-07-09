@@ -3,7 +3,8 @@ import type NotionSyncPlugin from "../main";
 import { SyncMode } from "../types";
 
 /**
- * Settings UI tab for the Notion Sync plugin.
+ * Settings UI tab for the Notion Sync plugin. Each section of the tab
+ * is built by its own method to keep display() a readable outline.
  */
 export class NotionSyncSettingTab extends PluginSettingTab {
   plugin: NotionSyncPlugin;
@@ -17,10 +18,16 @@ export class NotionSyncSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    ;
+    this.addConnectionSection(containerEl);
+    this.addSyncModeSection(containerEl);
+    this.addContentSection(containerEl);
+    this.addStatusSection(containerEl);
+    this.addDangerZone(containerEl);
+  }
 
-    // ── Connection ────────────────────────────────────────────
+  // ── Connection ────────────────────────────────────────────
 
+  private addConnectionSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName("Connection").setHeading();
 
     new Setting(containerEl)
@@ -74,9 +81,11 @@ export class NotionSyncSettingTab extends PluginSettingTab {
           }, 2000);
         })
       );
+  }
 
-    // ── Sync Mode ─────────────────────────────────────────────
+  // ── Sync Mode ─────────────────────────────────────────────
 
+  private addSyncModeSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName("Sync mode").setHeading();
 
     new Setting(containerEl)
@@ -113,9 +122,11 @@ export class NotionSyncSettingTab extends PluginSettingTab {
             })
         );
     }
+  }
 
-    // ── Content Options ───────────────────────────────────────
+  // ── Content Options ───────────────────────────────────────
 
+  private addContentSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName("Content").setHeading();
 
     new Setting(containerEl)
@@ -179,9 +190,11 @@ export class NotionSyncSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+  }
 
-    // ── Status ────────────────────────────────────────────────
+  // ── Status ────────────────────────────────────────────────
 
+  private addStatusSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName("Status").setHeading();
 
     const statusEl = containerEl.createDiv({ cls: "notion-sync-status" });
@@ -198,9 +211,11 @@ export class NotionSyncSettingTab extends PluginSettingTab {
         text: `Last full sync: ${new Date(lastSync).toLocaleString()}`,
       });
     }
+  }
 
-    // ── Danger Zone ───────────────────────────────────────────
+  // ── Danger Zone ───────────────────────────────────────────
 
+  private addDangerZone(containerEl: HTMLElement): void {
     new Setting(containerEl).setName("Danger zone").setHeading();
 
     new Setting(containerEl)

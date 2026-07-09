@@ -1,46 +1,40 @@
-import { requestUrl, TFile } from "obsidian";
-import type { App } from "obsidian";
+import type { App, TFile } from "obsidian";
 import type { NotionBlock, NotionBlockContent } from "./types";
 import type { StateManager } from "./stateManager";
-import { EMBED_PLACEHOLDER_PREFIX } from "./utils";
-
-/** Supported image extensions */
-const IMAGE_EXTENSIONS = new Set([
-  "png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico",
-]);
-
-/** Supported file extensions for embeds */
-const EMBED_EXTENSIONS = new Set([
-  ...IMAGE_EXTENSIONS,
-  "pdf", "mp3", "mp4", "webm", "ogg", "wav",
-]);
+import { EMBED_PLACEHOLDER_PREFIX, errMsg } from "./utils";
+import { AttachmentResolver } from "./attachments/attachmentResolver";
+import { UploadClient } from "./attachments/uploadClient";
+import { AttachmentBlockFactory } from "./attachments/attachmentBlockFactory";
+import { isImageExtension } from "./attachments/fileTypes";
 
 /**
- * Handles Obsidian attachment embeds (![[file.png]]) by:
- * 1. Reading the file from the vault
- * 2. Uploading to an external URL (if configured)
- * 3. Converting to Notion image/file blocks
- *
- * Without an upload endpoint, embeds become callout placeholders.
+ * Resolves Obsidian attachment embeds (![[file.png]]) in parsed blocks:
+ * finds the file in the vault (AttachmentResolver), uploads it when an
+ * endpoint is configured (UploadClient), and emits the matching Notion
+ * block (AttachmentBlockFactory). Without an upload endpoint, embeds
+ * become callout placeholders.
  */
 export class AttachmentUploader {
-  private app: App;
-  private stateManager: StateManager;
-  private uploadUrl: string;
+  private readonly resolver: AttachmentResolver;
+  private readonly uploader: UploadClient;
+  private readonly blocks = new AttachmentBlockFactory();
 
-  constructor(app: App, stateManager: StateManager, uploadUrl: string) {
-    this.app = app;
-    this.stateManager = stateManager;
-    this.uploadUrl = uploadUrl;
+  constructor(
+    app: App,
+    private readonly stateManager: StateManager,
+    uploadUrl: string
+  ) {
+    this.resolver = new AttachmentResolver(app);
+    this.uploader = new UploadClient(app, uploadUrl);
   }
 
   /** Update the upload URL when settings change */
   setUploadUrl(url: string): void {
-    this.uploadUrl = url;
+    this.uploader.setUrl(url);
   }
 
   /**
-   * Process a markdown file's content and resolve attachment embeds.
+   * Process a markdown file's parsed blocks and resolve attachment embeds.
    * Returns blocks with embeds resolved to image blocks where possible.
    */
   async processBlocks(
@@ -76,70 +70,23 @@ export class AttachmentUploader {
     filename: string,
     sourceFilePath: string
   ): Promise<NotionBlock> {
-    // Find the file in the vault
-    const file = this.findAttachment(filename, sourceFilePath);
+    const file = this.resolver.find(filename, sourceFilePath);
     if (!file) {
       this.stateManager.addLog("warn", `Attachment not found: ${filename}`, sourceFilePath);
-      return this.makePlaceholder(filename, "File not found in vault");
+      return this.blocks.placeholder(filename, "File not found in vault");
     }
 
     const ext = file.extension.toLowerCase();
 
-    // For images, try to create an image block
-    if (IMAGE_EXTENSIONS.has(ext)) {
+    if (isImageExtension(ext)) {
       return this.handleImage(file);
     }
 
-    // For PDFs and other files
     if (ext === "pdf") {
       return this.handlePdf(file);
     }
 
-    // Unsupported embed type
-    return this.makePlaceholder(filename, `Unsupported embed type: .${ext}`);
-  }
-
-  /**
-   * Find an attachment file in the vault.
-   * Obsidian resolves embeds relative to the source file and the vault's
-   * attachment folder setting.
-   */
-  private findAttachment(filename: string, sourceFilePath: string): TFile | null {
-    // Try resolving via Obsidian's link resolution
-    const resolved = this.app.metadataCache.getFirstLinkpathDest(
-      filename,
-      sourceFilePath
-    );
-
-    if (resolved) return resolved;
-
-    // Fallback: avoid enumerating the entire vault. Try common locations:
-    // 1) same folder as source file
-    // 2) an "attachments" subfolder next to the source file
-    // 3) a top-level "attachments" folder
-    // 4) filename at repo root
-    const tryPaths: string[] = [];
-    const sourceFolder = sourceFilePath.includes("/")
-      ? sourceFilePath.slice(0, sourceFilePath.lastIndexOf("/"))
-      : "";
-
-    if (sourceFolder) {
-      tryPaths.push(`${sourceFolder}/${filename}`);
-      tryPaths.push(`${sourceFolder}/attachments/${filename}`);
-    }
-
-    tryPaths.push(`attachments/${filename}`);
-    tryPaths.push(filename);
-
-    for (const p of tryPaths) {
-      const abstract = this.app.vault.getAbstractFileByPath(p);
-      if (abstract instanceof TFile) {
-        return abstract;
-      }
-    }
-
-    // Not found
-    return null;
+    return this.blocks.placeholder(filename, `Unsupported embed type: .${ext}`);
   }
 
   /**
@@ -147,31 +94,22 @@ export class AttachmentUploader {
    * and return an external image block. Otherwise return a placeholder.
    */
   private async handleImage(file: TFile): Promise<NotionBlock> {
-    if (this.uploadUrl) {
+    if (this.uploader.configured) {
       try {
-        const url = await this.uploadFile(file);
-        return {
-          type: "image",
-          image: {
-            type: "external",
-            external: { url },
-            caption: [
-              { type: "text", text: { content: file.name } },
-            ],
-          },
-        };
+        const url = await this.uploader.upload(file);
+        return this.blocks.image(url, file.name);
       } catch (error) {
         this.stateManager.addLog(
           "error",
-          `Failed to upload ${file.name}: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to upload ${file.name}: ${errMsg(error)}`,
           file.path
         );
       }
     }
 
-    return this.makePlaceholder(
+    return this.blocks.placeholder(
       file.name,
-      this.uploadUrl
+      this.uploader.configured
         ? "Upload failed"
         : "Configure attachment upload URL in settings to sync images"
     );
@@ -181,92 +119,19 @@ export class AttachmentUploader {
    * Handle PDF embeds similarly to images.
    */
   private async handlePdf(file: TFile): Promise<NotionBlock> {
-    if (this.uploadUrl) {
+    if (this.uploader.configured) {
       try {
-        const url = await this.uploadFile(file);
-        return {
-          type: "pdf",
-          pdf: {
-            type: "external",
-            external: { url },
-            caption: [
-              { type: "text", text: { content: file.name } },
-            ],
-          },
-        };
+        const url = await this.uploader.upload(file);
+        return this.blocks.pdf(url, file.name);
       } catch (error) {
         this.stateManager.addLog(
           "error",
-          `Failed to upload ${file.name}: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to upload ${file.name}: ${errMsg(error)}`,
           file.path
         );
       }
     }
 
-    return this.makePlaceholder(file.name, "Configure upload URL for PDF embeds");
-  }
-
-  /**
-   * Upload a file to the configured upload endpoint.
-   * Expects a POST endpoint that accepts multipart/form-data
-   * and returns JSON with { url: string }.
-   */
-  private async uploadFile(file: TFile): Promise<string> {
-    const arrayBuffer = await this.app.vault.readBinary(file);
-    const resp = await requestUrl({
-      url: this.uploadUrl,
-      method: "POST",
-      contentType: "application/octet-stream",
-      body: arrayBuffer,
-      throw: false,
-    });
-
-    if (resp.status < 200 || resp.status >= 300) {
-      throw new Error(`Upload failed: HTTP ${resp.status}`);
-    }
-
-    const data = resp.json as Record<string, unknown>;
-    if (!data.url) {
-      throw new Error("Upload response missing 'url' field");
-    }
-
-    return data.url as string;
-  }
-
-  /**
-   * Create a callout block as a placeholder for unresolved embeds.
-   */
-  private makePlaceholder(filename: string, reason: string): NotionBlock {
-    return {
-      type: "callout",
-      callout: {
-        rich_text: [
-          {
-            type: "text",
-            text: {
-              content: `\u{1F4CE} ${filename}\n${reason}`,
-            },
-          },
-        ],
-        icon: { type: "emoji", emoji: "\u{1F4CE}" },
-        color: "gray_background",
-      },
-    };
-  }
-
-  /**
-   * Check if a filename refers to an image.
-   */
-  static isImage(filename: string): boolean {
-    const ext = filename.split(".").pop()?.toLowerCase() || "";
-    return IMAGE_EXTENSIONS.has(ext);
-  }
-
-  /**
-   * Check if a filename refers to a supported embed type.
-   */
-  static isEmbeddable(filename: string): boolean {
-    const ext = filename.split(".").pop()?.toLowerCase() || "";
-    return EMBED_EXTENSIONS.has(ext);
+    return this.blocks.placeholder(file.name, "Configure upload URL for PDF embeds");
   }
 }
