@@ -18,6 +18,7 @@ export interface NotionApi {
   getPage(pageId: string): Promise<Record<string, unknown> | null>;
   getBlocksWithContent(pageId: string): Promise<NotionApiBlock[]>;
   getChildPages(pageId: string): Promise<Array<{ id: string; title: string }>>;
+  getPageTitle(page: Record<string, unknown>): string;
 }
 
 /**

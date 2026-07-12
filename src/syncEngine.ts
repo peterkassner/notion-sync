@@ -192,11 +192,23 @@ export class SyncEngine {
     return this.pull.pullFile(file);
   }
 
-  /** Pull all mapped files from Notion — always overwrites local files. */
+  /**
+   * Pull from Notion: refresh every already-mapped file, then discover and
+   * create local files for Notion pages not yet in the vault — including the
+   * root page's own content. Composing both services here means a first-time
+   * pull into an empty vault actually brings content down instead of finding
+   * no mappings and doing nothing.
+   */
   async pullAll(): Promise<PullResult> {
-    return this.runExclusive({ pulled: 0, skipped: 0, errors: 0 }, () =>
-      this.pull.pullAll()
-    );
+    return this.runExclusive({ pulled: 0, skipped: 0, errors: 0 }, async () => {
+      const refreshed = await this.pull.pullAll();
+      const imported = await this.importer.importNewPages();
+      return {
+        pulled: refreshed.pulled + imported.created,
+        skipped: refreshed.skipped,
+        errors: refreshed.errors + imported.errors,
+      };
+    });
   }
 
   /** Create local files for Notion pages not yet mapped to the vault. */

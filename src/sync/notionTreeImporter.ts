@@ -10,6 +10,7 @@ import type { StatePersister } from "./statePersister";
 import type { SyncControl } from "./syncControl";
 import type { VaultFileNamer } from "./vaultFileNamer";
 import type { WikiLinkRestorer } from "./wikiLinkRestorer";
+import type { NotionApiBlock } from "../types";
 import { errMsg, hashContent, sanitizeFileName } from "../utils";
 
 const MAX_TRAVERSAL_DEPTH = 20;
@@ -53,6 +54,13 @@ export class NotionTreeImporter {
       for (const mapping of Object.values(stateManager.getAllFileMappings())) {
         knownIds.add(normalizeNotionId(mapping.notionPageId));
       }
+
+      // Import the root page's own content first. Text written directly on the
+      // root page lives in ordinary blocks, not child_page blocks, so the tree
+      // walk below would never pick it up.
+      const rootOutcome = await this.importRootPage(knownIds);
+      if (rootOutcome === "created") created++;
+      else if (rootOutcome === "error") errors++;
 
       // Traverse recursively
       const result = await this.traverse(
@@ -122,7 +130,6 @@ export class NotionTreeImporter {
       if (control.aborted) break;
 
       const child = childPages[i];
-      const normalizedId = normalizeNotionId(child.id);
 
       // Report progress
       if (total > 0) {
@@ -161,67 +168,15 @@ export class NotionTreeImporter {
         }
       }
 
-      // Only create a file if this page is NOT already in our mappings
-      if (!knownIds.has(normalizedId)) {
-        try {
-          // Fetch blocks and convert to markdown
-          const blocks = await notion.getBlocksWithContent(child.id);
-          const rawMarkdown = this.deps.n2md.convert(blocks);
-          let markdown = this.deps.wikiLinks.restore(rawMarkdown);
-
-          // Download images if enabled
-          const safeTitle = sanitizeFileName(child.title);
-          const tempFilePath = currentFolder
-            ? `${currentFolder}/${safeTitle}.md`
-            : `${safeTitle}.md`;
-          markdown = await this.deps.images.process(markdown, tempFilePath);
-
-          // Determine file path
-          const filePath = this.deps.namer.findUniquePath(tempFilePath);
-
-          // Ensure parent folder exists
-          const parts = filePath.split("/");
-          parts.pop();
-          if (parts.length > 0) {
-            const dir = parts.join("/");
-            const existing = app.vault.getAbstractFileByPath(dir);
-            if (!existing) {
-              try {
-                await app.vault.createFolder(dir);
-              } catch {
-                // may already exist
-              }
-            }
-          }
-
-          await app.vault.create(filePath, markdown);
-
-          const hash = hashContent(markdown);
-          stateManager.setFileMapping(filePath, {
-            notionPageId: child.id,
-            lastSyncedHash: hash,
-            lastSyncedAt: Date.now(),
-          });
-          await this.deps.persister.persist();
-
-          // Add to known IDs so we don't create it again
-          knownIds.add(normalizedId);
-
-          // Add history entry
-          stateManager.addHistoryEntry({
-            timestamp: Date.now(),
-            operation: "pull-new",
-            filePath,
-            fileName: safeTitle,
-          });
-
-          stateManager.addLog("info", `Created from Notion: ${filePath}`, filePath);
-          created++;
-        } catch (e) {
-          errors++;
-          stateManager.addLog("error", `Failed to create page ${child.title}: ${errMsg(e)}`);
-        }
-      }
+      // Create a local file for this page unless it is already mapped.
+      const outcome = await this.createLocalFile(
+        child.id,
+        child.title,
+        currentFolder,
+        knownIds
+      );
+      if (outcome === "created") created++;
+      else if (outcome === "error") errors++;
 
       // Recurse into child pages
       if (hasChildren) {
@@ -246,5 +201,110 @@ export class NotionTreeImporter {
     }
 
     return { created, errors };
+  }
+
+  /**
+   * Create a local vault file from a single Notion page and map it. Returns
+   * 'skipped' when the page is already mapped. This is the one place that
+   * knows how to turn a Notion page into a file, shared by the tree walk and
+   * the root-page import so the logic is not duplicated.
+   */
+  private async createLocalFile(
+    pageId: string,
+    title: string,
+    folderPath: string,
+    knownIds: Set<string>
+  ): Promise<"created" | "skipped" | "error"> {
+    const { app, notion, stateManager } = this.deps;
+    const normalizedId = normalizeNotionId(pageId);
+    if (knownIds.has(normalizedId)) return "skipped";
+
+    try {
+      // Fetch blocks and convert to markdown
+      const blocks = await notion.getBlocksWithContent(pageId);
+      const rawMarkdown = this.deps.n2md.convert(blocks);
+      let markdown = this.deps.wikiLinks.restore(rawMarkdown);
+
+      // Download images if enabled
+      const safeTitle = sanitizeFileName(title);
+      const tempFilePath = folderPath
+        ? `${folderPath}/${safeTitle}.md`
+        : `${safeTitle}.md`;
+      markdown = await this.deps.images.process(markdown, tempFilePath);
+
+      // Determine a non-colliding file path
+      const filePath = this.deps.namer.findUniquePath(tempFilePath);
+
+      // Ensure parent folder exists
+      const parts = filePath.split("/");
+      parts.pop();
+      if (parts.length > 0) {
+        const dir = parts.join("/");
+        if (!app.vault.getAbstractFileByPath(dir)) {
+          try {
+            await app.vault.createFolder(dir);
+          } catch {
+            // may already exist
+          }
+        }
+      }
+
+      await app.vault.create(filePath, markdown);
+
+      const hash = hashContent(markdown);
+      stateManager.setFileMapping(filePath, {
+        notionPageId: pageId,
+        lastSyncedHash: hash,
+        lastSyncedAt: Date.now(),
+      });
+      await this.deps.persister.persist();
+
+      // Record so we don't create it again during this run
+      knownIds.add(normalizedId);
+
+      stateManager.addHistoryEntry({
+        timestamp: Date.now(),
+        operation: "pull-new",
+        filePath,
+        fileName: safeTitle,
+      });
+
+      stateManager.addLog("info", `Created from Notion: ${filePath}`, filePath);
+      return "created";
+    } catch (e) {
+      stateManager.addLog(
+        "error",
+        `Failed to create page ${title}: ${errMsg(e)}`
+      );
+      return "error";
+    }
+  }
+
+  /**
+   * Materialize the root page itself as a vault note, but only when it has
+   * content of its own (any block that is not a child_page). A pure container
+   * root is skipped so we don't create an empty note for it.
+   */
+  private async importRootPage(
+    knownIds: Set<string>
+  ): Promise<"created" | "skipped" | "error"> {
+    const { notion, stateManager } = this.deps;
+    const rootId = this.deps.settings().rootPageId;
+    if (!rootId || knownIds.has(normalizeNotionId(rootId))) return "skipped";
+
+    let blocks: NotionApiBlock[];
+    try {
+      blocks = await notion.getBlocksWithContent(rootId);
+    } catch (e) {
+      stateManager.addLog("warn", `Could not read root page: ${errMsg(e)}`);
+      return "skipped";
+    }
+
+    const hasOwnContent = blocks.some((b) => b.type !== "child_page");
+    if (!hasOwnContent) return "skipped";
+
+    const page = await notion.getPage(rootId);
+    const title = page ? notion.getPageTitle(page) : "Untitled";
+    return this.createLocalFile(rootId, title, "", knownIds);
   }
 }
