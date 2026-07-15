@@ -118,7 +118,7 @@ export class StateManager {
 
   // ── Sync Log ───────────────────────────────────────────────
 
-  /** Add a log entry */
+  /** Add a log entry (also mirrored to the developer console) */
   addLog(level: SyncLogEntry["level"], message: string, filePath?: string): void {
     this.log.push({
       timestamp: Date.now(),
@@ -131,6 +131,14 @@ export class StateManager {
     if (this.log.length > this.maxLogEntries) {
       this.log = this.log.slice(-this.maxLogEntries);
     }
+
+    const prefix = filePath
+      ? `[NotionSync][${level}] ${filePath}:`
+      : `[NotionSync][${level}]`;
+    const line = `${prefix} ${message}`;
+    if (level === "error") console.error(line);
+    else if (level === "warn") console.warn(line);
+    else console.log(line);
   }
 
   /** Get all log entries */

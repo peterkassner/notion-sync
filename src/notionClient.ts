@@ -17,6 +17,33 @@ interface NotionApiError extends Error {
   code?: string;
 }
 
+/** Collect external image/pdf/file URLs from a Notion request body for debug logs. */
+function extractExternalMediaUrls(body: unknown): string[] {
+  const urls: string[] = [];
+  const visit = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    const obj = node as Record<string, unknown>;
+    for (const key of ["image", "pdf", "file", "video", "audio"] as const) {
+      const media = obj[key];
+      if (media && typeof media === "object") {
+        const external = (media as Record<string, unknown>).external;
+        const url =
+          external && typeof external === "object"
+            ? (external as Record<string, unknown>).url
+            : undefined;
+        if (typeof url === "string") urls.push(url);
+      }
+    }
+    if (Array.isArray(obj.children)) visit(obj.children);
+  };
+  visit(body);
+  return urls;
+}
+
 /**
  * Wrapper around the Notion REST API using Obsidian's requestUrl.
  * Avoids the @notionhq/client SDK to prevent Electron/CORS issues.
@@ -69,6 +96,13 @@ export class NotionClient implements NotionApi {
       if (resp.status < 200 || resp.status >= 300) {
         const errBody = json as NotionErrorBody;
         const msg = errBody?.message || resp.text || `HTTP ${resp.status}`;
+        const imageUrls = extractExternalMediaUrls(body);
+        console.error(`[NotionSync][notion] ${method} ${path} → HTTP ${resp.status}`, {
+          code: errBody?.code,
+          message: msg,
+          imageUrls: imageUrls.length ? imageUrls : undefined,
+          body: json,
+        });
         const err = new Error(`Notion API error: ${msg}`) as NotionApiError;
         err.status = resp.status;
         err.code = errBody?.code;

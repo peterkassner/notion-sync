@@ -95,11 +95,19 @@ export class InlineFormatter {
       // Inline image: ![alt](url) — within paragraph, just add as text link
       const inlineImgMatch = remaining.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
       if (inlineImgMatch) {
+        const linkUrl = inlineImgMatch[2];
+        if (!/^https?:\/\//i.test(linkUrl)) {
+          console.warn(
+            `[NotionSync][parse] inline image link is not a public URL (Notion may reject): ${linkUrl}`
+          );
+        } else {
+          console.log(`[NotionSync][parse] inline image link → ${linkUrl}`);
+        }
         segments.push({
           type: "text",
           text: {
             content: inlineImgMatch[1] || "image",
-            link: { url: inlineImgMatch[2] },
+            link: { url: linkUrl },
           },
         });
         remaining = remaining.slice(inlineImgMatch[0].length);

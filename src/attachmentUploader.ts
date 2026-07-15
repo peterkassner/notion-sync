@@ -73,8 +73,11 @@ export class AttachmentUploader {
     const file = this.resolver.find(filename, sourceFilePath);
     if (!file) {
       this.stateManager.addLog("warn", `Attachment not found: ${filename}`, sourceFilePath);
+      console.warn(`[NotionSync][embed] not found: ${filename} (from ${sourceFilePath})`);
       return this.blocks.placeholder(filename, "File not found in vault");
     }
+
+    console.log(`[NotionSync][embed] resolve ${filename} → ${file.path} (.${file.extension})`);
 
     const ext = file.extension.toLowerCase();
 

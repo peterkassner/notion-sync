@@ -617,6 +617,15 @@ export class MarkdownParser {
   // ── Image / Embed Blocks ────────────────────────────────────
 
   private makeImageBlock(url: string, caption: string): NotionBlock {
+    // Markdown ![alt](url) bypasses the upload endpoint — Notion must be able
+    // to fetch this URL as-is. Local/relative paths usually fail validation.
+    if (!/^https?:\/\//i.test(url)) {
+      console.warn(
+        `[NotionSync][parse] markdown image is not a public URL (will likely fail in Notion): ${url}`
+      );
+    } else {
+      console.log(`[NotionSync][parse] markdown image → external ${url}`);
+    }
     return {
       type: "image",
       image: {
